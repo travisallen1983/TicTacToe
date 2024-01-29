@@ -20,4 +20,4 @@ This version has two different use cases.
 
 ### TicTacToe_3.0.py
 
-This version is simply a refactor of TicTacToe_2.0.py. Redundant code was moved into functions, and a logical error in calculating the ranking of wins and losses was corrected.
+This version is simply a refactor of TicTacToe_2.0.py. Redundant code was moved into functions and a logical error in calculating the ranking of wins and losses was corrected.
