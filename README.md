@@ -17,7 +17,3 @@ This version has two different use cases.
 1. A game with no previous data that records and ranks every move in both a winning and losing game when the positional choices are mostly random. The only non-random aspect is that blocking an opponents winning move will take precendence over a higher ranked move. The result of the games outcome is then written to a json file, except in the event that the game is a draw.
 
 2. A game that uses previous game data to pick the best move based off the highest ranked available position, which is only superseded by the need to block an opponents winning move. The result of the games outcome is then written to a json file, except in the event that the game is a draw.
-
-### TicTacToe_3.0.py
-
-This version is simply a refactor of TicTacToe_2.0.py. Redundant code was moved into functions and a logical error in calculating the ranking of wins and losses was corrected.
