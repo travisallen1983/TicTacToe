@@ -74,6 +74,24 @@ def print_message(character, number_of_character, message, number_of_spaces) -> 
     print('\n')
 
 
+def make_selection(opponent, previous_win_data, available_moves, current_iteration
+                   , string_one, string_two, string_three) -> list:
+    selection = []
+    best_choice = 0
+    if previous_win_data != []:
+        for i in range(len(previous_win_data[0])):
+            if previous_win_data[0][i][0] > best_choice and previous_win_data[0][i][1] in available_moves:
+                selection = previous_win_data[0][i][1]
+                best_choice = previous_win_data[0][i][0]
+    if current_iteration > 1:
+        defense = play_defense(opponent, string_one, string_two, string_three)
+        if defense != [] and defense[0] in available_moves:
+            selection = defense[0]
+    if selection == []:
+        selection = random.choice(available_moves)
+    return selection
+
+
 def play_defense(player, vertical_string_one, vertical_string_two, vertical_string_three) -> list:
     defend_position = []
 
@@ -104,6 +122,65 @@ def play_defense(player, vertical_string_one, vertical_string_two, vertical_stri
         column_index = 2 - vertical_two.index(' ')
         defend_position.append([vertical_two.index(' '), column_index])
     return defend_position
+
+
+def check_for_win(current_player, current_players_selections, ways_to_win) -> bool:
+    player_wins = False
+    match_one = False
+    match_two = False
+    match_three = False
+    for groups in ways_to_win:
+        for cell in groups:
+            for player_selection in current_players_selections:
+                if player_selection == cell and match_one is False:
+                    match_one = True
+                elif player_selection == cell and match_two is False:
+                    match_two = True
+                elif player_selection == cell and match_three is False:
+                    match_three = True
+        if match_one is True and match_two is True and match_three is True:
+            player_wins = True
+            print_message('*', 11
+                            , current_player + " WINS!", 2)
+            break
+        else:
+            match_one = False
+            match_two = False
+            match_three = False
+
+    return player_wins
+
+
+def record_wins_and_losses(get_games_data, game_outcome, ranked_choices):
+    value_plus_rank = []
+    value_rank = []
+
+    previous_game_data = get_games_data.get(game_outcome)
+
+    if previous_game_data  == []:
+        previous_rank = []
+        previous_value = []
+    else:
+        previous_rank = [x for x, y in previous_game_data[0]]
+        previous_value = [y for x, y in previous_game_data[0]]
+    rank = previous_rank
+    value = previous_value
+    for choice in ranked_choices:
+        for i in range(len(choice)):
+            if choice[i] not in value:
+                value.append(choice[i])
+                rank.append(1)
+            elif choice[i] in value:
+                for j in range(len(value)):
+                    if choice[i] == value[j]:
+                        rank[j] = rank[j] + 1
+    for i in range(len(rank)):
+        value_plus_rank.append(rank[i])
+        value_plus_rank.append(value[i])
+        value_rank.append(value_plus_rank)
+        value_plus_rank = []
+
+    return value_rank
 
 
 def play_game(grid_vertical, grid_horizontal, previous_wins_and_losses, number_of_games) -> dict:
@@ -170,40 +247,16 @@ def play_game(grid_vertical, grid_horizontal, previous_wins_and_losses, number_o
 
         for i in range(0, 9):
             if x_turn_to_play is True:
-                x_selection = []
-                best_choice = 0
-                if get_wins_data != []:
-                    for x in range(len(get_wins_data[0])):
-                        if get_wins_data[0][x][0] > best_choice and get_wins_data[0][x][1] in available_selection:
-                            x_selection = get_wins_data[0][x][1]
-                            best_choice = get_wins_data[0][x][0]
-                elif x_selection == []:
-                    x_selection = random.choice(available_selection)
-                if i > 1:
-                    defense = play_defense('O', vertical_string_one, vertical_string_two, vertical_string_three)
-                    if defense != [] and defense[0] in available_selection:
-                        x_selection = defense[0]
-                available_selection.remove(x_selection)
-                x_selected_cells.append(x_selection)
-                selection = x_selection
+                selection = make_selection('O', get_wins_data, available_selection, i
+                                           , vertical_string_one, vertical_string_two, vertical_string_three)
+                available_selection.remove(selection)
+                x_selected_cells.append(selection)
                 player_mark = 'X'
             elif o_turn_to_play is True:
-                o_selection = []
-                best_choice = 0
-                if get_wins_data != []:
-                    for o in range(len(get_wins_data[0])):
-                        if get_wins_data[0][o][0] > best_choice and get_wins_data[0][o][1] in available_selection:
-                            o_selection = get_wins_data[0][o][1]
-                            best_choice = get_wins_data[0][o][0]
-                elif o_selection == []:
-                    o_selection = random.choice(available_selection)
-                if i > 1:
-                    defense = play_defense('X', vertical_string_one,vertical_string_two,vertical_string_three)
-                    if defense != [] and defense[0] in available_selection:
-                        o_selection = defense[0]
-                available_selection.remove(o_selection)
-                o_selected_cells.append(o_selection)
-                selection = o_selection
+                selection = make_selection('X', get_wins_data, available_selection, i
+                                           , vertical_string_one, vertical_string_two, vertical_string_three)
+                available_selection.remove(selection)
+                o_selected_cells.append(selection)
                 player_mark = 'O'
             if selection == [0, 0]:
                 vertical_string_one = (vertical_string_one[:TOP_LEFT[0]]
@@ -258,50 +311,10 @@ def play_game(grid_vertical, grid_horizontal, previous_wins_and_losses, number_o
                          , vertical_string_three
                          )
 
-            match_one_x = False
-            match_two_x = False
-            match_three_x = False
             if i >= 4:
-                for groups in WAYS_TO_WIN:
-                    for cell in groups:
-                        for player_selection in x_selected_cells:
-                            if player_selection == cell and match_one_x is False:
-                                match_one_x = True
-                            elif player_selection == cell and match_two_x is False:
-                                match_two_x = True
-                            elif player_selection == cell and match_three_x is False:
-                                match_three_x = True
-                    if match_one_x is True and match_two_x is True and match_three_x is True:
-                        x_wins = True
-                        print_message('*', 11
-                                      , "X WINS!", 2)
-                        break
-                    else:
-                        match_one_x = False
-                        match_two_x = False
-                        match_three_x = False
+                x_wins = check_for_win('X', x_selected_cells, WAYS_TO_WIN)
 
-                match_one_o = False
-                match_two_o = False
-                match_three_o = False
-                for groups in WAYS_TO_WIN:
-                    for cell in groups:
-                        for player_selection in o_selected_cells:
-                            if player_selection == cell and match_one_o is False:
-                                match_one_o = True
-                            elif player_selection == cell and match_two_o is False:
-                                match_two_o = True
-                            elif player_selection == cell and match_three_o is False:
-                                match_three_o = True
-                    if match_one_o is True and match_two_o is True and match_three_o is True:
-                        o_wins = True
-                        print_message('*', 11
-                                      , "O WINS!", 2)
-                        break
-                    else:
-                        match_one_o = False
-                        match_two_o = False
-                        match_three_o = False
+                o_wins = check_for_win('O', o_selected_cells, WAYS_TO_WIN)
 
             if x_wins is True:
                 break
@@ -321,8 +334,6 @@ def play_game(grid_vertical, grid_horizontal, previous_wins_and_losses, number_o
             elif i != 8 and o_turn_to_play is True:
                 print_message('*', 12
                               , "O's PICK!", 2)
-
-                # time.sleep(1)
 
             if i == 8 and x_wins is False and o_wins is False:
                 print_message('*', 12
@@ -353,56 +364,8 @@ def play_game(grid_vertical, grid_horizontal, previous_wins_and_losses, number_o
     print('O Wins: ' + str(output_list[1]))
     print('Draws: ' + str(output_list[2]))
 
-    if game_data.get('WINS') == []:
-        previous_win_rank = []
-        previous_win_value = []
-    else:
-        previous_win_rank = [x for x, y in game_data.get('WINS')[0]]
-        previous_win_value = [y for x, y in game_data.get('WINS')[0]]
-    win_rank = previous_win_rank
-    win_value = previous_win_value
-    for choice in ranked_winning_choices:
-        for i in range(len(choice)):
-            if choice[i] not in win_value:
-                win_value.append(choice[i])
-                win_rank.append(1)
-            if choice[i] in win_value:
-                for j in range(len(win_value)):
-                    if choice[i] == win_value[j]:
-                        win_rank[j] = win_rank[j] + 1
-    win_value_plus_rank = []
-    win_value_rank = []
-    for i in range(len(win_rank)):
-        win_value_plus_rank.append(win_rank[i])
-        win_value_plus_rank.append(win_value[i])
-        win_value_rank.append(win_value_plus_rank)
-        win_value_plus_rank = []
-
-    if game_data.get('LOSSES') == []:
-        previous_loss_rank = []
-        previous_loss_value = []
-    else:
-        previous_loss_rank = [x for x, y in game_data.get('LOSSES')[0]]
-        previous_loss_value = [y for x, y in game_data.get('LOSSES')[0]]
-    loss_rank = previous_loss_rank
-    loss_value = previous_loss_value
-    for choice in ranked_losing_choices:
-        for i in range(len(choice)):
-            if choice[i] not in loss_value:
-                loss_value.append(choice[i])
-                loss_rank.append(1)
-            if choice[i] in loss_value:
-                for j in range(len(loss_value)):
-                    if choice[i] == loss_value[j]:
-                        loss_rank[j] = loss_rank[j] + 1
-
-    loss_value_plus_rank = []
-    loss_value_rank = []
-    for i in range(len(loss_rank)):
-        loss_value_plus_rank.append(loss_rank[i])
-        loss_value_plus_rank.append(loss_value[i])
-        loss_value_rank.append(loss_value_plus_rank)
-        loss_value_plus_rank = []
+    win_value_rank = record_wins_and_losses(game_data, 'WINS', ranked_winning_choices)
+    loss_value_rank = record_wins_and_losses(game_data, 'LOSSES', ranked_losing_choices)
 
     new_wins_data = [win_value_rank]
     new_losses_data = [loss_value_rank]
@@ -415,7 +378,7 @@ def play_game(grid_vertical, grid_horizontal, previous_wins_and_losses, number_o
 def main():
     project_location = r'..\TicTacToe'
     name_of_file = r'\previous_game_data_2.0.json'
-    total_games = 100_000
+    total_games = 10_000
 
     previous_game_data = read_previous_game_data(project_location, name_of_file)
 
